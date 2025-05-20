@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hanwella Dengue Map</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #d32f2f;
+            margin-bottom: 5px;
+        }
+        .header p {
+            color: #666;
+            margin-top: 0;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        .legend {
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            margin-top: 15px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 50%;
+        }
+        .high {
+            background-color: #d32f2f;
+        }
+        .medium {
+            background-color: #ff9800;
+        }
+        .low {
+            background-color: #4caf50;
+        }
+        .popup-content {
+            text-align: center;
+        }
+        .popup-content h3 {
+            margin: 5px 0;
+            color: #333;
+        }
+        .popup-content p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .popup-content .status {
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .high-text {
+            color: #d32f2f;
+        }
+        .medium-text {
+            color: #ff9800;
+        }
+        .low-text {
+            color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Dengue Prevalence in Hanwella, Sri Lanka</h1>
+            <p>View of high, medium, and low dengue-affected areas</p>
+        </div>
+        
+        <div id="map"></div>
+        
+        <div class="legend">
+            <h3>Dengue Prevalence</h3>
+            <div class="legend-item">
+                <div class="legend-color high"></div>
+                <span>High Risk Area</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color medium"></div>
+                <span>Medium Risk Area</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color low"></div>
+                <span>Low Risk Area</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script>
+        // Initialize the map centered at Hanwella
+        const map = L.map('map').setView([6.9013, 80.0833], 14);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Define the dengue locations with different severity levels
+        const locations = [
+            {
+                name: "Hanwella Town Center",
+                coords: [6.9013, 80.0833],
+                level: "high",
+                cases: 42,
+                details: "Dense population area with standing water issues"
+            },
+            {
+                name: "Pahala Hanwella",
+                coords: [6.9103, 80.0753],
+                level: "medium",
+                cases: 23,
+                details: "Residential area with moderate mosquito breeding sites"
+            },
+            {
+                name: "Maha Hanwella",
+                coords: [6.8913, 80.0713],
+                level: "low",
+                cases: 8,
+                details: "Rural area with better drainage systems"
+            }
+        ];
+
+        // Create custom icons for each severity level
+        function getMarkerIcon(level) {
+            let color;
+            switch(level) {
+                case "high":
+                    color = "#d32f2f";
+                    break;
+                case "medium":
+                    color = "#ff9800";
+                    break;
+                case "low":
+                    color = "#4caf50";
+                    break;
+                default:
+                    color = "#2196f3";
+            }
+            
+            return L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>`,
+                iconSize: [26, 26],
+                iconAnchor: [13, 13],
+                popupAnchor: [0, -13]
+            });
+        }
+
+        // Add markers for each location
+        locations.forEach(loc => {
+            const marker = L.marker(loc.coords, {icon: getMarkerIcon(loc.level)}).addTo(map);
+            
+            // Create popup content
+            const popupContent = `
+                <div class="popup-content">
+                    <h3>${loc.name}</h3>
+                    <p>Reported Cases: ${loc.cases}</p>
+                    <p>${loc.details}</p>
+                    <p class="status ${loc.level}-text">Risk Level: ${loc.level.charAt(0).toUpperCase() + loc.level.slice(1)}</p>
+                </div>
+            `;
+            
+            marker.bindPopup(popupContent);
+        });
+
+        // Add a polygon outlining Hanwella area
+        const hanwellaArea = [
+            [6.9213, 80.0933],
+            [6.9213, 80.0633],
+            [6.8813, 80.0633],
+            [6.8813, 80.0933]
+        ];
+        
+        L.polygon(hanwellaArea, {
+            color: '#333',
+            weight: 2,
+            fillColor: '#3388ff',
+            fillOpacity: 0.05
+        }).addTo(map);
+    </script>
+</body>
+</html>
